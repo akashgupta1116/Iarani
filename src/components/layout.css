@@ -1,0 +1,22 @@
+.heading{
+    text-align: center;
+}
+
+.login-col{
+    border-right: 2px solid #DFE1E5;
+}
+@media only screen and (max-width: 768px) {
+    .login-col{
+       border-right:none; 
+    }
+}
+/* @media only screen and (max-width:500px) {
+    .head{
+        
+        overflow-y: scroll;
+    }
+} */
+.head{
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
