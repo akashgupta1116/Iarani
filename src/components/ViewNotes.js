@@ -1,30 +1,28 @@
 import React, { Component } from 'react';
 import { Container,Row, Col,Table,Button, Modal, ModalHeader, ModalBody, ModalFooter,FormGroup, Label, Input,FormFeedback } from 'reactstrap';
-import './viewnotes.css'
+import './viewnotes.css';
+import { connect } from 'react-redux';
+import editMasterData from '../actionCreators/editMasterData.js';
 
 class ViewNotes extends Component {
     state={
         modal:false,
-        masterData:this.props.masterData || [],
         readOnlyModal:false,
         showEditData:{},
         showViewOnlyData:{},
         title:'',
-        content:''
+        content:'',
+        isDisabled:false
     }
     
-    static getDerivedStateFromProps=(nextProps, prevProps)=>{
-        return{masterData: nextProps.masterData};
-    }
     openModal=(event,index)=>{
         this.setState({
             modal:!this.state.modal
         },()=>this.showEditData(index))
     }
     showEditData=(index)=>{
-        // console.log('index',index)
         this.setState({
-            showEditData:{...this.state.masterData[index], index}
+            showEditData:{...this.props.masterData[index], index}
         })
     }
     toggle=()=>{
@@ -44,7 +42,7 @@ class ViewNotes extends Component {
     }
     showViewOnlyData=(index)=>{
         this.setState({
-            showViewOnlyData:this.state.masterData[index]
+            showViewOnlyData:this.props.masterData[index]
         })
     }
     changeHandler=(event)=>{
@@ -52,19 +50,27 @@ class ViewNotes extends Component {
         data[event.target.id]=event.target.value
         this.setState({
            showEditData:data
+        },()=>{
+            if(this.state.showEditData.title){
+                this.setState({
+                    isDisabled:false
+                })
+            }
+            else{
+                this.setState({
+                    isDisabled:true
+                })
+            }
         })
     }
     saveHandler=()=>{
-        let temp = this.state.masterData;
-        temp[this.state.showEditData.index] = this.state.showEditData;
-        this.setState({
-            masterData: temp
-        });
-        localStorage.setItem('masterData',JSON.stringify(this.state.masterData));
-        this.toggle();
+        let temp = [...this.props.masterData];
+         temp[this.state.showEditData.index] = this.state.showEditData;
+         this.props.editData(this.state.showEditData.index,this.state.showEditData);
+          this.toggle();
     }
     render() {
-        
+        console.log(this.props)
         return (
             <div >
                 <Container >
@@ -80,10 +86,10 @@ class ViewNotes extends Component {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                {this.state.masterData?this.state.masterData.map((item,index)=>{
+                                {this.props.masterData?this.props.masterData.map((item,index)=>{
                                      return <tr key={`${index}-${item.title}`}>
                                         <th scope="row">{index+1}</th>
-                                        <td onClick={(event)=>this.readOnlyOpenModel(event,index)}><a href>{item.title}</a></td>
+                                        <td><a href="javascript:void(0)" onClick={(event)=>this.readOnlyOpenModel(event,index)}>{item.title}</a></td>
                                         <td>{item.date}</td>
                                         <td><Button color="danger" onClick={(event)=>this.openModal(event,index)}>Edit</Button></td>
                                      </tr>
@@ -91,43 +97,39 @@ class ViewNotes extends Component {
                                 </tbody>
                             </Table>
                             <Modal isOpen={this.state.modal} toggle={this.toggle}>
-                                <ModalHeader toggle={this.toggle}>Edit Note</ModalHeader>
+                                <ModalHeader className="modal-header2" toggle={this.toggle}>Edit Note  <p className="date">{this.state.showEditData.date}</p> </ModalHeader>
                                 <ModalBody>
                                     <FormGroup>
-                                        <Label for="title">Title</Label>
+                                        <Label for="title">Title:</Label>
                                         
                                             <Input type="text" name="title" id="title"  value={this.state.showEditData.title} onChange={(event)=>this.changeHandler(event)}  />
-                                            <FormFeedback valid>This one is good.</FormFeedback>
-                                            <FormFeedback>Please provide correct input.</FormFeedback>
-                                        
+                                            
                                     </FormGroup>
                                     <FormGroup>
-                                        <Label for="content">Content</Label>
+                                        <Label for="content">Content:</Label>
                                         
                                         <Input type="textarea" name="content" id="content" value={this.state.showEditData.content} onChange={(event)=>this.changeHandler(event)}   />
-                                        <FormFeedback valid>This one is good.</FormFeedback>
-                                        <FormFeedback>Please provide correct input.</FormFeedback>
                                         
                                     </FormGroup>
                                 </ModalBody>
                                 <ModalFooter>
-                                    <Button color="primary" onClick={this.saveHandler}>Save</Button>{' '}
+                                    <Button color="primary" onClick={this.saveHandler} disabled={this.state.isDisabled}>Save</Button>{' '}
                                     <Button color="secondary" onClick={this.toggle}>Discard</Button>
                                 </ModalFooter>
                             </Modal>
                             <Modal isOpen={this.state.readOnlyModal} toggle={this.readOnlytoggle}>
-                                <ModalHeader toggle={this.readOnlytoggle}>View Note</ModalHeader>
+                                <ModalHeader className="modal-header2" toggle={this.readOnlytoggle}>View Note <p className="date">{this.state.showEditData.date}</p></ModalHeader>
                                 <ModalBody>
                                     <FormGroup>
-                                        <Label for="view-title">Title</Label>
+                                        <Label for="view-title">Title:</Label>
                                         
-                                            <p >{this.state.showViewOnlyData.title}</p> 
+                                            <p className="view-text">{this.state.showViewOnlyData.title}</p> 
                                         
                                     </FormGroup>
                                     <FormGroup>
-                                        <Label for="view-content">Content</Label>
+                                        <Label for="view-content">Content:</Label>
                                         
-                                        <p>{this.state.showViewOnlyData.content} </p>
+                                        <p className="view-text">{this.state.showViewOnlyData.content} </p>
                                         
                                     </FormGroup>
                                 </ModalBody>
@@ -141,5 +143,11 @@ class ViewNotes extends Component {
         );
     }
 }
+const mapStateToProps = ({ masterData }) =>({
+    masterData
+})
 
-export default ViewNotes;
+const mapDispatchToProps = dispatch => ({
+    editData:(index,obj)=> dispatch(editMasterData(index,obj))
+})
+export default connect(mapStateToProps,mapDispatchToProps)(ViewNotes);;

@@ -1,4 +1,19 @@
-/* .table-column{
-    max-height:100vh !important;
+.table-column{
+    max-height:90vh !important;
     overflow-y: scroll !important;
-} */
+}
+.table-column::-webkit-scrollbar{
+    display: none;
+}
+.date{
+    display: inline-block;
+    margin-left:200px;
+}
+@media only screen and (max-width: 768px) {
+    .date{
+       margin-left:70px; 
+    }
+}
+.view-text{
+    color: #6C757D;
+}
